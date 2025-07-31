@@ -99,11 +99,8 @@ def preprocess_input(user_input):
     # Ensure the order of columns matches the training data
     processed_input = processed_input[training_columns]
 
-    # Convert boolean columns to int (0 or 1) if the model expects that
-    # Check the dtypes of X_train or df_encoded to be sure.
-    # From the notebook output, df_encoded has bool columns.
-    # Let's keep them as boolean for now, assuming the models handle them.
-    # If models expect int, convert here: processed_input = processed_input.astype(int)
+    # Convert boolean columns to int (0 or 1)
+    processed_input = processed_input.astype(int)
 
 
     return processed_input
