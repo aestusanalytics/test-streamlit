@@ -1,7 +1,9 @@
+%%writefile app.py
 import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
+import sys
 
 # Load the saved models
 models = {
@@ -156,6 +158,19 @@ if st.button("Predict Pass/Fail"):
 
     # Preprocess the input using the loaded training columns
     processed_input_df = preprocess_input(user_input, training_columns)
+
+    # --- Diagnostic Prints ---
+    # Print info about the processed input DataFrame to the Streamlit logs
+    print("--- Processed Input DataFrame Info ---", file=sys.stderr)
+    processed_input_df.info(buf=sys.stderr)
+    print("\n--- Processed Input DataFrame Head ---", file=sys.stderr)
+    print(processed_input_df.head().to_string(), file=sys.stderr)
+    print("\n--- Processed Input DataFrame Null Values ---", file=sys.stderr)
+    print(processed_input_df.isnull().sum().to_string(), file=sys.stderr)
+    print("\n--- Processed Input DataFrame dtypes ---", file=sys.stderr)
+    print(processed_input_df.dtypes.to_string(), file=sys.stderr)
+    # --- End Diagnostic Prints ---
+
 
     st.subheader("Prediction Results:")
 
