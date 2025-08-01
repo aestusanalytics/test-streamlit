@@ -1,4 +1,8 @@
-
+import streamlit as st
+import joblib
+import pandas as pd
+import numpy as np
+import sys
 
 # Load the saved models
 models = {
@@ -23,43 +27,21 @@ def preprocess_input(user_input, training_columns):
                 'reason', 'guardian', 'schoolsup', 'famsup', 'paid', 'activities',
                 'nursery', 'higher', 'internet', 'romantic']
 
-    # Create an empty DataFrame with the correct columns and data types based on training data
-    processed_input = pd.DataFrame(columns=training_columns)
+    # Apply one-hot encoding to the input data
+    input_df_encoded = pd.get_dummies(input_df, columns=cat_cols, drop_first=True)
 
-    # Fill the DataFrame with default values (0 for int/float, False for bool)
-    for col in training_columns:
-        # Infer data type from column name (simplified)
-        # A more robust approach would be to save and load data types from training data
-        if any(substring in col for substring in ['age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'failures',
-                                                 'famrel', 'freetime', 'goout', 'Dalc', 'Walc', 'health',
-                                                 'absences', 'G1', 'G2', 'G3']):
-             processed_input[col] = 0
-        else: # These are the boolean columns from OHE
-             processed_input[col] = False
+    # Reindex the encoded input DataFrame to match the training columns
+    # This adds any missing columns from the training data and fills them with 0
+    processed_input = input_df_encoded.reindex(columns=training_columns, fill_value=0)
 
-
-    # Update the DataFrame with user input
-    for key, value in user_input.items():
-        if key in processed_input.columns:
-            processed_input[key] = value
-        elif isinstance(value, str) and f"{key}_{value}" in processed_input.columns:
-             # Handle encoded categorical features
-             # This assumes the format 'columnname_category' matches the OHE output
-             processed_input[f"{key}_{value}"] = True
-        elif isinstance(value, bool) and f"{key}_yes" in processed_input.columns:
-             # Handle binary categorical features like schoolsup, famsup, etc.
-             if value:
-                 processed_input[f"{key}_yes"] = True
-        elif isinstance(value, str) and f"{key}_{value.lower()}" in processed_input.columns:
-             # Handle case variations in user input for categorical features
-             processed_input[f"{key}_{value.lower()}"] = True
-
-
-    # Ensure the order of columns matches the training data
+    # Ensure the order of columns matches the training data (reindex already does this, but good for clarity)
     processed_input = processed_input[training_columns]
 
     # Convert boolean columns to int (0 or 1) - this was identified as a potential issue
-    processed_input = processed_input.astype(int)
+    # This is necessary because get_dummies can create boolean columns
+    for col in processed_input.columns:
+        if processed_input[col].dtype == 'bool':
+            processed_input[col] = processed_input[col].astype(int)
 
 
     return processed_input
